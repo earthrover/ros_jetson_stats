@@ -124,19 +124,21 @@ class ROSJtop:
         # Make diagnostic message for each cpu
         self.arr.status += [cpu_status(self.hardware, name, jetson.cpu[name]) for name in jetson.cpu]
         # Merge all other diagnostics
-        self.arr.status += [gpu_status(self.hardware, jetson.gpu[1])]
+        self.arr.status += [gpu_status(self.hardware, name, jetson.gpu[name])
+                            for name in self.jetson.gpu]
         self.arr.status += [ram_status(self.hardware, jetson.ram, 'mem')]
         self.arr.status += [swap_status(self.hardware, jetson.swap, 'mem')]
         self.arr.status += [emc_status(self.hardware, jetson.emc, 'mem')]
         # Temperature
         self.arr.status += [temp_status(self.hardware, jetson.temperature, self.level_options)]
         # Read power
-        total, power = jetson.power
+        power = jetson.power
         if power:
-            self.arr.status += [power_status(self.hardware, total, power)]
+            self.arr.status += [power_status(self.hardware, power)]
         # Fan controller
         if jetson.fan:
-            self.arr.status += [fan_status(self.hardware, jetson.fan, 'board')]
+            self.arr.status += [fan_status(self.hardware, key, jetson.fan)
+                                for key, value in self.jetson.fan.items()]
         # Status board and board info
         self.arr.status += [self.board_status]
         # Add disk status
