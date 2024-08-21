@@ -39,6 +39,7 @@ from ros_jetson_stats.utils import (
     other_status,
     board_status,
     disk_status,
+    engine_status,
     cpu_status,
     fan_status,
     gpu_status,
@@ -126,19 +127,28 @@ class ROSJtop:
         # Merge all other diagnostics
         self.arr.status += [gpu_status(self.hardware, name, jetson.gpu[name])
                             for name in self.jetson.gpu]
+        # Make diagnostic message for each engine
+        self.arr.status += [engine_status(self.hardware, name, engine)
+                            for name, engine in jetson.engine.items()]
         self.arr.status += [ram_status(self.hardware, jetson.ram, 'mem')]
         self.arr.status += [swap_status(self.hardware, jetson.swap, 'mem')]
         self.arr.status += [emc_status(self.hardware, jetson.emc, 'mem')]
-        # Temperature
-        self.arr.status += [temp_status(self.hardware, jetson.temperature, self.level_options)]
-        # Read power
-        power = jetson.power
-        if power:
-            self.arr.status += [power_status(self.hardware, power)]
+        # Make diagnostic message for each Temperature
+        self.arr.status += [temp_status(self.hardware, name, sensor)
+                            for name, sensor in jetson.temperature.items()]
+        # Make diagnostic message for each power rail
+        self.arr.status += [power_status(self.hardware, name, rail)
+                            for name, rail in self.jetson.power['rail'].items()]
+        if 'name' in self.jetson.power['tot']:
+            name_total = self.jetson.power['tot']['name']
+        else:
+            name_total = 'ALL'
+        self.arr.status += [power_status(self.hardware,
+                                         name_total, jetson.power['tot'])]
         # Fan controller
         if jetson.fan:
             self.arr.status += [fan_status(self.hardware, key, jetson.fan)
-                                for key, value in self.jetson.fan.items()]
+                                for key, value in jetson.fan.items()]
         # Status board and board info
         self.arr.status += [self.board_status]
         # Add disk status
