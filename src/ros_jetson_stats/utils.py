@@ -130,6 +130,8 @@ def board_status(hardware, board, dgtype):
     values = []
     for key, value in board['hardware'].items():
         values.append(KeyValue(key=key, value=str(value)))
+    for key, value in board['platform'].items():
+        values.append(KeyValue(key=key, value=str(value)))
     for key, value in board['libraries'].items():
         values.append(KeyValue(key='lib ' + key, value=str(value)))
     # Make board diagnostic status
@@ -173,19 +175,24 @@ def cpu_status(hardware, name, cpu):
         if 'idle' in cpu:
             # Decode utilizaiton status
             val = 100 - cpu['idle']
-            freq_cpu = unit_to_string(cpu['freq']['cur'], 'k', 'Hz')
             # Make Diagnostic Status message with cpu info
             values = [
                 KeyValue(key='Idle', value=f"{cpu['idle']:6.2f}%"),
                 KeyValue(key='User', value=f"{cpu['user']:6.2f}%"),
                 KeyValue(key='Nice', value=f"{cpu['nice']:6.2f}%"),
                 KeyValue(key='System', value=f"{cpu['system']:6.2f}%"),
-                KeyValue(key='Governor', value=cpu['governor']),
-                KeyValue(key='Freq', value=freq_cpu)]
+                ]
             # Update message
             message = f'{val:6.2f}%'
+        if 'freq' in cpu:
+            freq_cpu = unit_to_string(cpu['freq']['cur'], 'k', 'Hz')
+            values.append(KeyValue(key='Freq', value=freq_cpu))
+        if 'governor' in cpu:
+            values.append(KeyValue(key='Governor', value=cpu['governor']))
         if 'model' in cpu and cpu['model']:
             values.append(KeyValue(key='Model', value=cpu['model']))
+        if 'online' in cpu and cpu['online']:
+            values.append(KeyValue(key='Online', value=str(cpu['online'])))
 
     # Build diagnostic message
     d_cpu = DiagnosticStatus(

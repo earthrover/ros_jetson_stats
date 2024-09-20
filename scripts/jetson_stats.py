@@ -76,7 +76,7 @@ class ROSJtop:
         # Extract board information
         board = self.jetson.board
         # Define hardware name
-        self.hardware = board["platform"]["Machine"]
+        self.hardware = self.jetson.local_interfaces['hostname']
         # Board status message
         self.board_status = board_status(self.hardware, board, 'board')
         # Set callback
@@ -123,16 +123,16 @@ class ROSJtop:
         # Status board and board info
         self.arr.status = [other_status(self.hardware, jetson, jtop.__version__)]
         # Make diagnostic message for each cpu
-        self.arr.status += [cpu_status(self.hardware, name, jetson.cpu[name]) for name in jetson.cpu]
+        self.arr.status += [cpu_status(self.hardware, str(name), cpu) for name, cpu in enumerate(jetson.cpu['cpu'])] + [cpu_status(self.hardware, '', jetson.cpu['total'])]
         # Merge all other diagnostics
         self.arr.status += [gpu_status(self.hardware, name, jetson.gpu[name])
                             for name in self.jetson.gpu]
         # Make diagnostic message for each engine
         self.arr.status += [engine_status(self.hardware, name, engine)
                             for name, engine in jetson.engine.items()]
-        self.arr.status += [ram_status(self.hardware, jetson.ram, 'mem')]
-        self.arr.status += [swap_status(self.hardware, jetson.swap, 'mem')]
-        self.arr.status += [emc_status(self.hardware, jetson.emc, 'mem')]
+        self.arr.status += [ram_status(self.hardware, jetson.memory['RAM'], 'mem')]
+        self.arr.status += [swap_status(self.hardware, jetson.memory['SWAP'], 'mem')]
+        self.arr.status += [emc_status(self.hardware, jetson.memory['EMC'], 'mem')]
         # Make diagnostic message for each Temperature
         self.arr.status += [temp_status(self.hardware, name, sensor)
                             for name, sensor in jetson.temperature.items()]
@@ -147,7 +147,7 @@ class ROSJtop:
                                          name_total, jetson.power['tot'])]
         # Fan controller
         if jetson.fan:
-            self.arr.status += [fan_status(self.hardware, key, jetson.fan)
+            self.arr.status += [fan_status(self.hardware, key, value)
                                 for key, value in jetson.fan.items()]
         # Status board and board info
         self.arr.status += [self.board_status]
@@ -173,7 +173,8 @@ def wrapper():
     # Start jetson
     jetson.start()
     # Spin ros
-    rospy.spin()
+    while not rospy.is_shutdown() and jetson.jetson.ok():
+        rospy.sleep(0.1)
     # Close jtop
     jetson.stop()
 
