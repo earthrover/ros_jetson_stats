@@ -43,6 +43,7 @@ from ros_jetson_stats.utils import (
     cpu_status,
     fan_status,
     gpu_status,
+    network_status,
     ram_status,
     swap_status,
     power_status,
@@ -127,6 +128,7 @@ class ROSJtop:
         # Merge all other diagnostics
         self.arr.status += [gpu_status(self.hardware, name, jetson.gpu[name])
                             for name in self.jetson.gpu]
+        self.arr.status += [network_status(self.hardware, jetson.local_interfaces)]
         # Make diagnostic message for each engine
         self.arr.status += [engine_status(self.hardware, name, engine)
                             for name, engine in jetson.engine.items()]

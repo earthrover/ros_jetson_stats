@@ -388,4 +388,19 @@ def engine_status(hardware, name_group, engines):
         hardware_id=hardware,
         values=values)
     return d_engine
+
+
+def network_status(hardware, network):
+    values = [KeyValue(key='Hostname', value=network['hostname'])]
+    message = '{} interfaces'.format(len(network['interfaces']))
+
+    for name, ip in network['interfaces'].items():
+        values.append(KeyValue(key=name, value=ip))
+
+    d_network = DiagnosticStatus(
+        name=f'jetson_stats/network',
+        message=message,
+        hardware_id=hardware,
+        values=values)
+    return d_network
 # EOF
